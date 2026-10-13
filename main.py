@@ -1,5 +1,8 @@
-from app.ui.window import Window
+"""Launch the Desmos-style graphing application."""
+def main():
+    from app.ui.window import DesmosWindow
+    window = DesmosWindow()
+    window.run()
 
-
-window = Window()
-window.run()
+if __name__ == "__main__":
+    main()

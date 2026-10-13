@@ -1,64 +1,37 @@
 import unittest
-
-from app.graph.viewport import viewport
-from app.graph.grid import grid
 from app.graph.graph import Graph
+from app.graph.viewport import viewport
 from app.graph.coordinates import coordinates
-from app.graph.axes import axes
 
+class GraphTests(unittest.TestCase):
+    def test_add_and_clear(self):
+        graph = Graph()
+        equation = graph.add_equation("y=x^2")
+        self.assertIsNone(equation.error)
+        self.assertTrue(equation.points)
+        graph.clear_equations()
+        self.assertEqual(graph.equations, [])
 
-class TestGraph(unittest.TestCase):
+    def test_bad_expression(self):
+        graph = Graph()
+        equation = graph.add_equation("import os")
+        self.assertIsNotNone(equation.error)
+        self.assertEqual(equation.points, [])
 
-    def test_viewport_default_values(self):
-        view = viewport()
-
-        self.assertEqual(view.x_min, -50)
-        self.assertEqual(view.x_max, 50)
-        self.assertEqual(view.y_min, -50)
-        self.assertEqual(view.y_max, 50)
-
-    def test_viewport_custom_values(self):
+    def test_zoom_and_pan(self):
         view = viewport(-10, 10, -5, 5)
+        view.zoom(0.5)
+        self.assertEqual(view.get_bounds(), (-5.0, 5.0, -2.5, 2.5))
+        view.pan(1, 2)
+        self.assertEqual(view.get_bounds(), (-4.0, 6.0, -0.5, 4.5))
 
-        self.assertEqual(view.x_min, -10)
-        self.assertEqual(view.x_max, 10)
-        self.assertEqual(view.y_min, -5)
-        self.assertEqual(view.y_max, 5)
-
-    def test_grid_default_values(self):
-        graph_grid = grid()
-
-        self.assertEqual(graph_grid.x_min, -50)
-        self.assertEqual(graph_grid.x_max, 50)
-        self.assertEqual(graph_grid.y_min, -50)
-        self.assertEqual(graph_grid.y_max, 50)
-        self.assertEqual(graph_grid.grid_spacing, 1)
-
-    def test_grid_custom_spacing(self):
-        graph_grid = grid(-10, 10, -10, 10, 2)
-
-        self.assertEqual(graph_grid.grid_spacing, 2)
-
-    def test_coordinates(self):
-        point = coordinates(3, 4)
-
-        self.assertEqual(point.x, 3)
-        self.assertEqual(point.y, 4)
-
-    def test_graph_stores_viewport(self):
-        view = viewport()
-        graph = Graph(view)
-
-        self.assertIs(graph.viewport, view)
-
-    def test_axes_stores_viewport_and_grid(self):
-        view = viewport()
-        graph_grid = grid()
-        graph_axes = axes(view, graph_grid)
-
-        self.assertIs(graph_axes.viewport, view)
-        self.assertIs(graph_axes.grid, graph_grid)
-
+    def test_coordinate_conversion(self):
+        view = viewport(-1, 1, -1, 1)
+        point = coordinates(0, 0)
+        self.assertEqual(point.to_screen(view, 100, 100), (50, 50))
+        restored = coordinates.from_screen(50, 50, view, 100, 100)
+        self.assertAlmostEqual(restored.x, 0)
+        self.assertAlmostEqual(restored.y, 0)
 
 if __name__ == "__main__":
     unittest.main()
